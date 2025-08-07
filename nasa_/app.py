@@ -3,7 +3,7 @@ import googletrans
 import subprocess
 import streamlit as st
 
-NASA_KEY = "8wIzaSGsNEToB8VowCX1ae9VFXjT2NANOp6sOZuS"
+NASA_KEY = ""
 
 def get_apod(api_key="DEMO_KEY"):
     url = "https://api.nasa.gov/planetary/apod"
