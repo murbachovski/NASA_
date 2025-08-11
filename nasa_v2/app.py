@@ -19,18 +19,16 @@ def get_apod(api_key="DEMO_KEY"):
     
     if response.status_code == 200:
         data = response.json()
-        # print("Title:", data.get("title"))
-        title = data.get("title")
-        # print("Date:", data.get("date"))
-        date = data.get("date")
-        # print("Explanation:", data.get("explanation"))
-        explanation = data.get("explanation")
-        # print("Image URL:", data.get("url"))
-        url = data.get("url")
-        return title, date, explanation, url
+        return {
+            "title": data.get("title"),
+            "date": data.get("date"),
+            "explanation": data.get("explanation"),
+            "url": data.get("url"),
+            "hdurl": data.get("hdurl"),
+            "media_type": data.get("media_type")
+        }
     else:
-        # print("Error:", response.status_code)
-        return response.status_code
+        return None
 
 def download_image(url, filename="show.jpg"):
     response = requests.get(url)
@@ -53,8 +51,7 @@ def show_image_imgcat(filename):
 def google_trans_eng_ko(sentence_kor):
     translator = googletrans.Translator()
     result = translator.translate(sentence_kor, dest='ko')
-    result = result.text
-    return result
+    return result.text
 
 def fetch_soho_image(wavelength: str) -> bytes:
     """
@@ -65,106 +62,80 @@ def fetch_soho_image(wavelength: str) -> bytes:
     response = requests.get(url)
     return response.content if response.status_code == 200 else None
 
-if __name__ == "__main__":
-    nasa = get_apod(api_key=NASA_KEY)
-    if isinstance(nasa, tuple):
-        # title, date, explanation, url = nasa
-        # explanation_kor = google_trans_eng_ko(explanation)
-        # title_kor = google_trans_eng_ko(title)
-        # print(f"Title      : {title}")
-        # print(f"Title      : {title_kor}")
-        # print(f"Date       : {date}")
-        # print(f"Explanation:\n{explanation}\n")
-        # print(f"Explanation_kor:\n{explanation_kor}\n")
-        # print(f"Image URL  : {url}")
-        # filename = download_image(url)
-        # print(show_image(filename))
-        print("SUCCESS")
+st.title("🚀 NASA와 함께하는 우주 대탐험")
+
+st.divider()
+
+if st.button("NASA에서 선정한 오늘의 우주", icon="✨"):
+    progress = st.progress(0)  # 0%부터 시작
+
+    progress.progress(10)
+    apod_data = get_apod(api_key=NASA_KEY)
+
+    if apod_data is None:
+        progress.empty()
+        st.error("NASA API 요청 실패!")
     else:
-        print(f"Error: Status code {nasa}")
-
-################## STREAMLIT ##################
-    st.title("🚀 NASA와 함께하는 우주 대탐험")
-
-    st.divider() # 구분선x
-
-    if st.button("NASA에서 선정한 오늘의 우주", icon="✨"):
-        ### PROGRESSBAR
-        progress = st.progress(0)  # 0%부터 시작
-    
-        # 10%: API 데이터 요청 시작
-        progress.progress(10)
-        title, date, explanation, url = get_apod(api_key=NASA_KEY)
-        
-        # 50%: 번역 중
         progress.progress(50)
-        explanation_kor = google_trans_eng_ko(explanation)
-        title_kor = google_trans_eng_ko(title)
-        
-        # 100%: 완료
+        explanation_kor = google_trans_eng_ko(apod_data["explanation"])
+        title_kor = google_trans_eng_ko(apod_data["title"])
         progress.progress(100)
-        
         time.sleep(0.3)
-        
-        # 프로그래스바 제거
         progress.empty()
 
-        title, date, explanation, url = get_apod(api_key=NASA_KEY)
-        explanation_kor = google_trans_eng_ko(explanation)
-        title_kor = google_trans_eng_ko(title)
-        st.image(url, caption=title, use_container_width=True)
-        # st.image(url, caption=f"{title}\n{title_kor}", use_container_width=True)
-        st.markdown(f"**📅 날짜:** {date}")
-        st.markdown(f"**📝 설명 (영어):**\n\n{explanation}")
-        st.markdown(f"**📝 설명 (한국어):**\n\n{explanation_kor}")
-        st.markdown(f"[🔗 원본 링크 바로가기]({url})")
-    
-    st.divider() # 구분선x
+        media_url = apod_data.get("hdurl") or apod_data.get("url")
 
-    # --- 2. 최신 지구 사진 (EPIC) ---
-    # st.header("🌍 최신 지구 사진")
-    if st.button("지구 셀카 보기", icon="🌍"):
-        with st.spinner("NASA 서버에서 최신 이미지를 가져오는 중입니다..."):
-            # 모듈의 함수를 호출하여 이미지 데이터와 캡션을 받음
-            image_bytes, caption_text = get_latest_earth_image_data()
-
-        # 성공적으로 데이터를 받아왔는지 확인
-        if image_bytes:
-            st.success("짜잔! 최신 지구 사진을 성공적으로 가져왔습니다.")
-            # st.image()가 이미지 바이트를 직접 받아 화면에 렌더링
-            st.image(
-                image_bytes,
-                caption=f"캡션: {caption_text}"
-            )
-            st.info("이 이미지는 계속 업데이트되고 있습니다.")
+        if apod_data["media_type"] == "image" and media_url:
+            st.image(media_url, caption=apod_data["title"], use_container_width=True)
+        elif apod_data["media_type"] == "video" and media_url:
+            st.video(media_url)
         else:
-            st.error("이미지를 가져오는 데 실패했습니다. 잠시 후 다시 시도해주세요.")
-            
-    st.divider() # 구분선x
-    
-    # --- 태양 사진 탭 ---
-    if st.button("뜨거운 태양", icon='☀️',key="sun_button"):
-        image_bytes = fetch_latest_eit304_image()
-        
-        if image_bytes:
-            st.image(image_bytes, caption="태양 최신 이미지")
-        else:
-            st.error("이미지를 가져오는 데 실패했습니다.")
-
-    st.divider() # 구분선x
-    # --- 태양 이미지 표시 버튼 ---
-    if st.button("자외선 태양 4종", icon="🌞"):
-        # 4개의 파장
-        wavelengths = ['eit_171', 'eit_195', 'eit_284', 'eit_304']
-        captions = ['EIT 171', 'EIT 195', 'EIT 284', 'EIT 304']
-        
-        # 4개 칼럼으로 나눔
-        cols = st.columns(4)
-        
-        for i in range(4):
-            image = fetch_soho_image(wavelengths[i])
-            if image:
-                # cols[i].image(image, caption=captions[i], use_column_width=True)
-                cols[i].image(image, caption=captions[i], use_container_width=True)
+            st.warning("오늘 자료에는 표시 가능한 이미지나 영상이 없습니다.")
+            if media_url:
+                st.markdown(f"[🔗 원본 링크 바로가기]({media_url})")
             else:
-                cols[i].error("이미지를 불러오지 못했습니다.")
+                apod_official_url = f"https://apod.nasa.gov/apod/ap{apod_data['date'].replace('-', '')}.html"
+                st.markdown(f"[🔗 APOD 공식 페이지 바로가기]({apod_official_url})")
+
+        st.markdown(f"**📅 날짜:** {apod_data['date']}")
+        st.markdown(f"**📝 설명 (영어):**\n\n{apod_data['explanation']}")
+        st.markdown(f"**📝 설명 (한국어):**\n\n{explanation_kor}")
+        st.markdown(f"**제목 (한글):** {title_kor}")
+
+st.divider()
+
+if st.button("지구 셀카 보기", icon="🌍"):
+    with st.spinner("NASA 서버에서 최신 이미지를 가져오는 중입니다..."):
+        image_bytes, caption_text = get_latest_earth_image_data()
+
+    if image_bytes:
+        st.success("짜잔! 최신 지구 사진을 성공적으로 가져왔습니다.")
+        st.image(image_bytes, caption=f"캡션: {caption_text}")
+        st.info("이 이미지는 계속 업데이트되고 있습니다.")
+    else:
+        st.error("이미지를 가져오는 데 실패했습니다. 잠시 후 다시 시도해주세요.")
+
+st.divider()
+
+if st.button("뜨거운 태양", icon='☀️', key="sun_button"):
+    image_bytes = fetch_latest_eit304_image()
+
+    if image_bytes:
+        st.image(image_bytes, caption="태양 최신 이미지")
+    else:
+        st.error("이미지를 가져오는 데 실패했습니다.")
+
+st.divider()
+
+if st.button("자외선 태양 4종", icon="🌞"):
+    wavelengths = ['eit_171', 'eit_195', 'eit_284', 'eit_304']
+    captions = ['EIT 171', 'EIT 195', 'EIT 284', 'EIT 304']
+
+    cols = st.columns(4)
+
+    for i in range(4):
+        image = fetch_soho_image(wavelengths[i])
+        if image:
+            cols[i].image(image, caption=captions[i], use_container_width=True)
+        else:
+            cols[i].error("이미지를 불러오지 못했습니다.")
