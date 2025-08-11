@@ -37,8 +37,8 @@ pip install -r requirements.txt
   ---
   <img src="https://github.com/user-attachments/assets/eb7636e4-e40a-4737-b46f-45710ea81a1a" width="700">
 
-  <img src="https://github.com/user-attachments/assets/0cea65ab-2a7e-4a21-a5af-f02c6c2e78f3" width="700">
-  <img src="https://github.com/user-attachments/assets/84aff42c-45ff-4668-8f1e-bf437269b893" width="700">
+  ---
+  + 공식 링크 삽입 수정완료
 </p>
 
 # Ngrok
