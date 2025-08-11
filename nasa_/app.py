@@ -1,9 +1,9 @@
 import requests
 import googletrans
-import subprocess
 import streamlit as st
 
 NASA_KEY = ""
+
 
 def get_apod(api_key="DEMO_KEY"):
     url = "https://api.nasa.gov/planetary/apod"
@@ -14,71 +14,51 @@ def get_apod(api_key="DEMO_KEY"):
     
     if response.status_code == 200:
         data = response.json()
-        # print("Title:", data.get("title"))
-        title = data.get("title")
-        # print("Date:", data.get("date"))
-        date = data.get("date")
-        # print("Explanation:", data.get("explanation"))
-        explanation = data.get("explanation")
-        # print("Image URL:", data.get("url"))
-        url = data.get("url")
-        return title, date, explanation, url
+        return {
+            "title": data.get("title"),
+            "date": data.get("date"),
+            "explanation": data.get("explanation"),
+            "url": data.get("url"),
+            "hdurl": data.get("hdurl"),
+            "media_type": data.get("media_type")
+        }
     else:
-        # print("Error:", response.status_code)
-        return response.status_code
+        return None
 
-def download_image(url, filename="show.jpg"):
-    response = requests.get(url)
-    if response.status_code == 200:
-        with open(filename, "wb") as f:
-            f.write(response.content)
-        print(f"Image save as {filename}")
-    else:
-        print("Failed to download image")
-    return filename
-
-def show_image_imgcat(filename):
-    try:
-        subprocess.run(["imgcat", filename], check=True)
-    except FileNotFoundError:
-        print("imgcat 명령어를 찾을 수 없습니다. iTerm2에서 실행 중인지 확인하세요.")
-    except subprocess.CalledProcessError as e:
-        print(f"imgcat 실행 중 오류 발생: {e}")
-
-def google_trans_eng_ko(sentence_kor):
+def google_trans_eng_ko(text):
     translator = googletrans.Translator()
-    result = translator.translate(sentence_kor, dest='ko')
-    result = result.text
-    return result
+    translated = translator.translate(text, dest='ko')
+    return translated.text
 
-if __name__ == "__main__":
-    nasa = get_apod(api_key=NASA_KEY)
-    if isinstance(nasa, tuple):
-        # title, date, explanation, url = nasa
-        # explanation_kor = google_trans_eng_ko(explanation)
-        # title_kor = google_trans_eng_ko(title)
-        # print(f"Title      : {title}")
-        # print(f"Title      : {title_kor}")
-        # print(f"Date       : {date}")
-        # print(f"Explanation:\n{explanation}\n")
-        # print(f"Explanation_kor:\n{explanation_kor}\n")
-        # print(f"Image URL  : {url}")
-        # filename = download_image(url)
-        # print(show_image(filename))
-        print("SUCCESS")
+st.title("🚀 NASA 탐험")
+
+if st.button("오늘의 우주 보기"):
+    apod_data = get_apod(api_key=NASA_KEY)
+
+    if apod_data is None:
+        st.error("NASA API 요청 실패!")
     else:
-        print(f"Error: Status code {nasa}")
+        explanation_kor = google_trans_eng_ko(apod_data["explanation"])
+        title_kor = google_trans_eng_ko(apod_data["title"])
 
-################## STREAMLIT ##################
-    st.title("🚀 NASA 탐험")
+        # 미디어 URL 선택 (hdurl 우선, 없으면 url)
+        media_url = apod_data.get("hdurl") or apod_data.get("url")
 
-    if st.button("오늘의 우주 보기"):
-        title, date, explanation, url = get_apod(api_key=NASA_KEY)
-        explanation_kor = google_trans_eng_ko(explanation)
-        title_kor = google_trans_eng_ko(title)
-        st.image(url, caption=title, use_container_width=True)
-        # st.image(url, caption=f"{title}\n{title_kor}", use_container_width=True)
-        st.markdown(f"**📅 날짜:** {date}")
-        st.markdown(f"**📝 설명 (영어):**\n\n{explanation}")
+        # 미디어 타입에 따라 처리
+        if apod_data["media_type"] == "image" and media_url:
+            st.image(media_url, caption=apod_data["title"], use_container_width=True)
+        elif apod_data["media_type"] == "video" and media_url:
+            st.video(media_url)
+        else:
+            st.warning("오늘 자료는 공식 사이트에서 확인해주세요.")
+            if media_url:
+                st.markdown(f"[🔗 원본 링크 바로가기]({media_url})")
+            else:
+                # 링크도 없으면 APOD 공식 페이지 링크 안내
+                apod_official_url = f"https://apod.nasa.gov/apod/ap{apod_data['date'].replace('-', '')}.html"
+                st.markdown(f"[🔗 APOD 공식 페이지 바로가기]({apod_official_url})")
+
+        st.markdown(f"**📅 날짜:** {apod_data['date']}")
+        st.markdown(f"**📝 설명 (영어):**\n\n{apod_data['explanation']}")
         st.markdown(f"**📝 설명 (한국어):**\n\n{explanation_kor}")
-        st.markdown(f"[🔗 원본 링크 바로가기]({url})")
+        st.markdown(f"**제목 (한글):** {title_kor}")
