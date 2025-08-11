@@ -37,11 +37,11 @@ pip install -r requirements.txt
   <img src="https://github.com/user-attachments/assets/2946622e-d7e3-483a-b673-688b23229f69" width="700">
   
   <img src="https://github.com/user-attachments/assets/ea3e2851-2c8d-4239-94ae-bc3bf38d0f08" width="700">
+  <img src="https://github.com/user-attachments/assets/52dd8971-08ff-4c3b-86ff-43116d30a761" width="700">
   
   <img src="https://github.com/user-attachments/assets/0cea65ab-2a7e-4a21-a5af-f02c6c2e78f3" width="700">
   <img src="https://github.com/user-attachments/assets/84aff42c-45ff-4668-8f1e-bf437269b893" width="700">
   
-  <img src="https://github.com/user-attachments/assets/52dd8971-08ff-4c3b-86ff-43116d30a761" width="700">
   <img src="https://github.com/user-attachments/assets/684cd8ae-e65c-4d2a-bbcf-9c635c35ffca" width="700">
   <img src="https://github.com/user-attachments/assets/4837a8d7-2617-4752-8821-1d9ef88f3676" width="700">
   <img src="https://github.com/user-attachments/assets/9f8c5bb9-cda8-4d81-82e4-798f2dac351e" width="700">
